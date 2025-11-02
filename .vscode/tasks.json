@@ -1,0 +1,29 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMake: configure",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-S", "${workspaceFolder}",
+                "-B", "${workspaceFolder}/build",
+                "-G", "MinGW Makefiles",
+                "-DCMAKE_BUILD_TYPE=Debug"
+            ],
+            "group": "build"
+        },
+        {
+            "label": "CMake: build",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build", "${workspaceFolder}/build",
+                "--config", "Debug",
+                "--", "-j4"
+            ],
+            "group": "build",
+            "dependsOn": "CMake: configure"
+        }
+    ]
+}
