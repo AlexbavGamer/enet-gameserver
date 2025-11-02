@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-build
-=======
 # Prerequisites
 *.d
 
@@ -42,4 +39,5 @@ build
 
 # debug information files
 *.dwo
->>>>>>> 7f248d030d3e5cdbb8e63f9675e6de917263ec5c
+
+build
