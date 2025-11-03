@@ -12,12 +12,13 @@ using json = nlohmann::json;
 SecureDatabase::SecureDatabase(const std::string& conn_str) {
     try {
         sql_.open(soci::mysql, conn_str);
+
         initializeAllowedTables();
-        
+
         // Compilar regex para validação de nomes
         table_name_regex_.assign("^[a-zA-Z_][a-zA-Z0-9_]*$");
         column_name_regex_.assign("^[a-zA-Z_][a-zA-Z0-9_]*$");
-        
+
         safePrint("[SECURE DB] Banco de dados inicializado com segurança");
     } catch (const std::exception& e) {
         safePrint("[SECURE DB ERRO] " + std::string(e.what()));

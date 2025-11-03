@@ -12,7 +12,6 @@
 
 using json = nlohmann::json;
 
-// Estrutura para gerenciar pacotes com RAII
 class ManagedPacket {
 private:
     ENetPacket* packet_;

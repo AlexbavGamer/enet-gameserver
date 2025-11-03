@@ -3,6 +3,8 @@
 #include <fstream>
 #include <filesystem>
 #include "encoding_utils.h"
+#include "utils/logger.h"
+#include "config/constants.h"
 
 // Implementação do gerenciador Lua
 std::unique_ptr<LuaState> luaManager;
@@ -105,12 +107,12 @@ bool LuaState::executeFunction(const std::string& scriptName, const std::string&
 
 void LuaState::registerAPI() {
     // Registrar funções utilitárias
-    lua.set_function("log", [](const std::string& message) {
-        safePrint("[LUA] " + message);
+    lua.set_function("log", [](const std::string& prefix, const std::string& message) {
+        LOG_INFO(prefix, message);
     });
 
     lua.set_function("print", [](const std::string& message) {
-        safePrint("[LUA PRINT] " + message);
+        LOG_INFO(Config::LOG_PREFIX_LUA, "[PRINT] " + message);
     });
 }
 

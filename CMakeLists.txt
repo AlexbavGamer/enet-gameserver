@@ -76,16 +76,22 @@ ExternalProject_Add(
     INSTALL_COMMAND ""
 )
 
-# ==============================
-# ExternalProject: Lua (usando LuaDist ou Lua com Makefile modificado)
-# ==============================
 ExternalProject_Add(
     lua_external
     GIT_REPOSITORY https://github.com/LuaDist/lua.git
     GIT_TAG master
     SOURCE_DIR ${LUA_SRC}
     BINARY_DIR ${LUA_BUILD}
-    CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release
+
+    # Executa antes da configuração: renomeia luaconf.h.orig -> luaconf.h
+    PATCH_COMMAND
+        ${CMAKE_COMMAND} -E copy_if_different
+            ${LUA_SRC}/src/luaconf.h.orig
+            ${LUA_SRC}/src/luaconf.h
+        COMMAND ${CMAKE_COMMAND} -E echo "✅ Renomeado luaconf.h.orig -> luaconf.h"
+
+    # Configuração normal
+    CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     BUILD_COMMAND cmake --build ${LUA_BUILD}
     INSTALL_COMMAND ""
 )
@@ -114,6 +120,23 @@ add_executable(${PROJECT_NAME}
     src/secure_packet_handler.cpp
     src/lua_interface.cpp
     src/encoding_utils.cpp
+    
+    # Arquivos do servidor
+    src/server/server.cpp
+    src/server/player_manager.cpp
+    
+    # Arquivos de banco de dados
+    src/database/database_manager.cpp
+    
+    # Arquivos de rede
+    src/network/network_manager.cpp
+    
+    # Arquivos de jogo
+    src/game/game_manager.cpp
+    src/game/lua_manager.cpp
+    
+    # Arquivos utilitários
+    src/utils/console_utils.cpp
 )
 
 # ==============================
@@ -133,6 +156,14 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${SOL2_SRC}/include
     C:/mariadb-connector-c/include/mariadb
     C:/mingw64/include
+    
+    # Novos diretórios de código fonte
+    ${CMAKE_SOURCE_DIR}/src/config
+    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/src/database
+    ${CMAKE_SOURCE_DIR}/src/network
+    ${CMAKE_SOURCE_DIR}/src/game
+    ${CMAKE_SOURCE_DIR}/src/utils
 )
 
 # ==============================

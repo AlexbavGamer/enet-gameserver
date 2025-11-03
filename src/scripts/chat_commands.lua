@@ -9,7 +9,7 @@ local commandCooldowns = {} -- Controle de cooldown para comandos
 -- Função principal de inicialização
 function main()
     print("Sistema de comandos de chat inicializado via Lua!")
-    log("Carregado script de comandos de chat")
+    log("INFO", "Carregado script de comandos de chat")
     
     -- Inicializar estruturas de dados
     initializeChatSystem()
@@ -30,7 +30,7 @@ function initializeChatSystem()
         ["sorteio"] = 30
     }
     
-    log("Sistema de chat inicializado com sucesso")
+    log("INFO", "Sistema de chat inicializado com sucesso")
 end
 
 -- Processar comandos de chat avançados
@@ -38,7 +38,7 @@ function processAdvancedCommand(playerId, username, command)
     local cmd = command:sub(2):match("^%s*(%S+)")
     local args = command:sub(#cmd + 3):gsub("^%s+", ""):gsub("%s+$", "")
     
-    log("Comando avançado recebido: " .. cmd .. " de " .. username)
+    log("DEBUG", "Comando avançado recebido: " .. cmd .. " de " .. username)
     
     -- Verificar cooldown
     if isOnCooldown(playerId, cmd) then
@@ -290,7 +290,7 @@ function initialize()
     
     -- Exportar funções para o servidor C++
     -- Em implementação real, estas seriam registradas como callbacks
-    log("Sistema de comandos de chat inicializado com sucesso")
+    log("INFO", "Sistema de comandos de chat inicializado com sucesso")
 end
 
 -- Chamar inicialização quando o script for carregado
