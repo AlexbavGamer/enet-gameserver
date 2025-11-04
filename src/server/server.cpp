@@ -8,6 +8,7 @@
 
 #include "server.h"
 #include "../secure_packet_handler.h"
+#include "../lua_unified.h"
 #include <nlohmann/json.hpp>
 #include <console_utils.h>
 #include <thread>
@@ -30,8 +31,10 @@ using json = nlohmann::json;
 Server::Server()
     : network_manager_(std::make_unique<NetworkManager>())
     , database_manager_(std::make_unique<DatabaseManager>())
+    , config_manager_(std::make_unique<ConfigManager>())
     , player_manager_(std::make_unique<PlayerManager>(std::make_unique<DatabaseManager>()))
     , lua_manager_(std::make_unique<LuaManager>(this))
+    , lua_unified_(std::make_unique<LuaUnified::LuaUnifiedInterface>())
     , running_(false)
     , last_cleanup_(std::chrono::steady_clock::now()) {
     
@@ -89,8 +92,8 @@ void Server::shutdown() {
     running_ = false;
     
     // Shutdown dos componentes na ordem correta
-    if (lua_manager_) {
-        lua_manager_->shutdown();
+    if (lua_unified_) {
+        lua_unified_->shutdown();
     }
     
     if (network_manager_) {
@@ -125,10 +128,28 @@ bool Server::initializeComponents() {
         return false;
     }
     
-    // Inicializar LuaManager
-    if (!lua_manager_->initialize()) {
+    // Inicializar Lua Unificado
+    if (!lua_unified_->initialize()) {
         LOG_WARNING(Config::LOG_PREFIX_LUA, Config::LUA_INIT_ERROR);
     } else {
+        // Configurar os módulos na interface unificada
+        lua_unified_->setServer(this);
+        lua_unified_->setConfigManager(config_manager_.get());
+        lua_unified_->setDatabase(nullptr); // SecureDatabase será implementado como módulo independente
+        lua_unified_->setPacketHandler(nullptr); // SecurePacketHandler será implementado como módulo independente
+        lua_unified_->setNetworkManager(network_manager_.get());
+        lua_unified_->setGameManager(game_manager_.get());
+        lua_unified_->setPlayerManager(game_manager_->getPlayerManager());
+        lua_unified_->setDatabaseManager(database_manager_.get());
+        
+        // Registrar os módulos globais para scripts de teste
+        lua_unified_->registerConfigManager();
+        lua_unified_->registerGameManager();
+        lua_unified_->registerPlayerManager();
+        lua_unified_->registerDatabaseManager();
+        lua_unified_->registerNetworkManager();
+        lua_unified_->registerSecurePacketHandler();
+
         // Carregar scripts Lua
         if (!loadLuaScripts()) {
             LOG_WARNING(Config::LOG_PREFIX_LUA, "Falha ao carregar alguns scripts Lua");
@@ -196,7 +217,7 @@ void Server::cleanupInactivePlayers() {
 }
 
 bool Server::loadLuaScripts() {
-    return lua_manager_->loadAllScripts(Config::SCRIPTS_DIRECTORY);
+    return lua_unified_->loadAllScripts(Config::SCRIPTS_DIRECTORY);
 }
 
 bool Server::setupPacketHandlers() {

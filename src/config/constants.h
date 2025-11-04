@@ -14,47 +14,51 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#ifdef HELP_COMMAND
+#undef HELP_COMMAND
+#endif
+
 #include <string>
 
 namespace Config {
     // ==============================
     // Configurações do Servidor
     // ==============================
-    constexpr int SERVER_PORT = 7777;                    ///< Porta do servidor
-    constexpr int MAX_CLIENTS = 32;                      ///< Número máximo de clientes
-    constexpr int MAX_CHANNELS = 2;                      ///< Número de canais de rede
-    constexpr int SERVER_TIMEOUT_MS = 1000;              ///< Timeout do servidor em ms
-    constexpr int INACTIVE_PLAYER_CLEANUP_INTERVAL = 30; ///< Intervalo de limpeza em segundos
-    constexpr int INACTIVE_PLAYER_TIMEOUT = 5;           ///< Timeout de inatividade em minutos
+    constexpr int SERVER_PORT = 7777;                    
+    constexpr int MAX_CLIENTS = 32;                      
+    constexpr int MAX_CHANNELS = 2;                      
+    constexpr int SERVER_TIMEOUT_MS = 1000;              
+    constexpr int INACTIVE_PLAYER_CLEANUP_INTERVAL = 30; 
+    constexpr int INACTIVE_PLAYER_TIMEOUT = 5;           
     
     // ==============================
     // Configurações de Banco de Dados
     // ==============================
-    constexpr const char* PLAYERS_TABLE = "players";    ///< Nome da tabela de jogadores
+    constexpr const char* PLAYERS_TABLE = "players";    
     
     // ==============================
     // Configurações de Rede
     // ==============================
-    constexpr const char* DEFAULT_HOST = "ENET_HOST_ANY"; ///< Host padrão
+    constexpr const char* DEFAULT_HOST = "ENET_HOST_ANY"; 
     
     // ==============================
     // Configurações de Scripts
     // ==============================
-    constexpr const char* SCRIPTS_DIRECTORY = "scripts";      ///< Diretório dos scripts Lua
-    constexpr const char* CHAT_SCRIPTS = "chat_commands";    ///< Script de comandos de chat
-    constexpr const char* GAME_LOGIC_SCRIPT = "game_logic";    ///< Script de lógica do jogo
+    constexpr const char* SCRIPTS_DIRECTORY = "scripts";      
+    constexpr const char* CHAT_SCRIPTS = "chat_commands";    
+    constexpr const char* GAME_LOGIC_SCRIPT = "game_logic";    
     
     // ==============================
     // Configurações de Comandos
     // ==============================
-    constexpr const char* HELP_COMMAND = "/ajuda";           ///< Comando de ajuda
-    constexpr const char* PLAYERS_COMMAND = "/jogadores";    ///< Comando de listar jogadores
-    constexpr const char* TIME_COMMAND = "/tempo";           ///< Comando de tempo
+    constexpr const char* HELP_COMMAND = "/ajuda";    
+    constexpr const char* PLAYERS_COMMAND = "/jogadores";    
+    constexpr const char* TIME_COMMAND = "/tempo";           
     
     // ==============================
     // Templates de Mensagens
     // ==============================
-    constexpr const char* LOGIN_SUCCESS_MSG = "Login OK";    ///< Mensagem de login bem-sucedido
+    constexpr const char* LOGIN_SUCCESS_MSG = "Login OK";    
     constexpr const char* HELP_MSG = "Comandos disponíveis: /ajuda, /jogadores, /tempo";
     constexpr const char* UNKNOWN_COMMAND_MSG = "Comando não reconhecido. Use /ajuda para ajuda.";
     constexpr const char* LUA_ERROR_MSG = "Falha ao processar comando. Sistema Lua pode estar com problemas.";
@@ -62,13 +66,13 @@ namespace Config {
     // ==============================
     // Prefixos de Log
     // ==============================
-    constexpr const char* LOG_PREFIX_PLAYER = "[PLAYER]";   ///< Prefixo para logs de jogador
-    constexpr const char* LOG_PREFIX_LOGIN = "[LOGIN]";     ///< Prefixo para logs de login
-    constexpr const char* LOG_PREFIX_CHAT = "[CHAT]";       ///< Prefixo para logs de chat
-    constexpr const char* LOG_PREFIX_MOVE = "[MOVE]";       ///< Prefixo para logs de movimento
-    constexpr const char* LOG_PREFIX_LUA = "[LUA]";         ///< Prefixo para logs de Lua
-    constexpr const char* LOG_PREFIX_DEBUG = "[DEBUG]";     ///< Prefixo para logs de debug
-    constexpr const char* LOG_PREFIX_ERROR = "[ERRO]";      ///< Prefixo para logs de erro
+    constexpr const char* LOG_PREFIX_PLAYER = "[PLAYER]";   
+    constexpr const char* LOG_PREFIX_LOGIN = "[LOGIN]";     
+    constexpr const char* LOG_PREFIX_CHAT = "[CHAT]";       
+    constexpr const char* LOG_PREFIX_MOVE = "[MOVE]";       
+    constexpr const char* LOG_PREFIX_LUA = "[LUA]";         
+    constexpr const char* LOG_PREFIX_DEBUG = "[DEBUG]";     
+    constexpr const char* LOG_PREFIX_ERROR = "[ERRO]";      
     
     // ==============================
     // Mensagens de Erro

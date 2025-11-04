@@ -17,6 +17,10 @@
  * @date 2025
  */
 
+#ifdef ERROR
+#undef ERROR
+#endif
+
 #ifndef LOGGER_H
 #define LOGGER_H
 

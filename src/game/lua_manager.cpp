@@ -1,4 +1,5 @@
 #include "lua_manager.h"
+#include "../server/server.h"
 #include <filesystem>
 #include <fstream>
 
@@ -262,7 +263,13 @@ void LuaManager::registerLuaFunctions() {
         lua_->set_function("getServerInfo", [this]() {
             if (!server_) {
                 LOG_ERROR(Config::LOG_PREFIX_LUA, "Server não disponível para getServerInfo");
-                return sol::nil;
+                sol::table info = lua_->create_table();
+                info["name"] = "Servidor Indisponível";
+                info["version"] = "1.0";
+                info["max_players"] = 0;
+                info["port"] = 0;
+                info["running"] = false;
+                return info;
             }
             sol::table info = lua_->create_table();
             info["name"] = "Secure Multiplayer Server";

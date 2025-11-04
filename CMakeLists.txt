@@ -109,35 +109,16 @@ ExternalProject_Add(
     INSTALL_COMMAND ""
 )
 
+file(GLOB_RECURSE SRC_FILES
+    "${CMAKE_SOURCE_DIR}/src/*.cpp"
+    "${CMAKE_SOURCE_DIR}/src/*.c"
+)
+
 # ==============================
 # Executável
 # ==============================
 # Compilar executável com suporte a Lua
-add_executable(${PROJECT_NAME}
-    src/main.cpp
-    src/packethandler.cpp
-    src/secure_database.cpp
-    src/secure_packet_handler.cpp
-    src/lua_interface.cpp
-    src/encoding_utils.cpp
-    
-    # Arquivos do servidor
-    src/server/server.cpp
-    src/server/player_manager.cpp
-    
-    # Arquivos de banco de dados
-    src/database/database_manager.cpp
-    
-    # Arquivos de rede
-    src/network/network_manager.cpp
-    
-    # Arquivos de jogo
-    src/game/game_manager.cpp
-    src/game/lua_manager.cpp
-    
-    # Arquivos utilitários
-    src/utils/console_utils.cpp
-)
+add_executable(${PROJECT_NAME} ${SRC_FILES})
 
 # ==============================
 # Dependências (sem Lua por enquanto)

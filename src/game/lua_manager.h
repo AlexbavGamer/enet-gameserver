@@ -3,11 +3,13 @@
 
 #include "../config/constants.h"
 #include "../utils/logger.h"
-#include "../server/server.h"
 #include <sol/sol.hpp>
 #include <string>
 #include <unordered_map>
 #include <memory>
+
+// Forward declaration para evitar dependência circular
+class Server;
 
 class LuaManager {
 private:

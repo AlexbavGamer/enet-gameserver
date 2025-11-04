@@ -19,11 +19,13 @@
 
 #include "../config/constants.h"
 #include "../utils/logger.h"
+#include "../config_manager.h"
 #include "../database/database_manager.h"
 #include "../server/player_manager.h"
 #include "../network/network_manager.h"
 #include "../game/game_manager.h"
 #include "../game/lua_manager.h"
+#include "../lua_unified.h"
 #include <enet/enet.h>
 #include <memory>
 #include <chrono>
@@ -44,11 +46,13 @@
 class Server {
 private:
     // Componentes do sistema
+    std::unique_ptr<ConfigManager> config_manager_;    ///< Gerenciador de configuração
     std::unique_ptr<NetworkManager> network_manager_;  ///< Gerenciador de operações de rede
     std::unique_ptr<DatabaseManager> database_manager_; ///< Gerenciador de banco de dados
     std::unique_ptr<PlayerManager> player_manager_;    ///< Gerenciador de jogadores
     std::unique_ptr<GameManager> game_manager_;        ///< Gerenciador de lógica do jogo
-    std::unique_ptr<LuaManager> lua_manager_;          ///< Gerenciador de scripts Lua
+    std::unique_ptr<LuaManager> lua_manager_;          ///< Gerenciador de scripts Lua (legado)
+    std::unique_ptr<LuaUnified::LuaUnifiedInterface> lua_unified_; ///< Interface Lua unificada
     
     // Estado do servidor
     bool running_;                                     ///< Flag indicando se o servidor está rodando
@@ -82,6 +86,7 @@ public:
     // Acesso aos componentes
     GameManager* getGameManager() const { return game_manager_.get(); }
     LuaManager* getLuaManager() const { return lua_manager_.get(); }
+    LuaUnified::LuaUnifiedInterface* getLuaUnified() const { return lua_unified_.get(); }
     
 private:
     // Inicialização dos componentes

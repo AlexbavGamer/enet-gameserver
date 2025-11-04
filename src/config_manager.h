@@ -12,6 +12,9 @@ private:
     // Default configuration values
     void setDefaults();
     
+    // Update configuration from key-value pair
+    void updateConfigFromKey(const std::string& key, const std::string& value);
+    
 public:
     ConfigManager();
     ~ConfigManager() = default;
