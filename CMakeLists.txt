@@ -1,232 +1,229 @@
-cmake_minimum_required(VERSION 3.15)
-project(GameServer LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.20)
+project(GameServer LANGUAGES C CXX)
 
-# ==============================
-# Compiladores
-# ==============================
-set(CMAKE_C_COMPILER C:/mingw64/bin/gcc.exe)
-set(CMAKE_CXX_COMPILER C:/mingw64/bin/g++.exe)
+# ----------------------------------------------------------------------
+# Configurações gerais
+# ----------------------------------------------------------------------
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-# ==============================
-# Diretórios
-# ==============================
-set(BUILD_DIR ${CMAKE_BINARY_DIR})
-set(ENET_SRC  ${BUILD_DIR}/enet-src)
-set(ENET_BUILD ${BUILD_DIR}/enet-build)
-set(JSON_SRC  ${BUILD_DIR}/json-src)
-set(SOCI_SRC  ${BUILD_DIR}/soci-src)
-set(SOCI_BUILD ${BUILD_DIR}/soci-build)
-set(LUA_SRC   ${BUILD_DIR}/lua-src)
-set(LUA_BUILD ${BUILD_DIR}/lua-build)
-set(SOL2_SRC  ${BUILD_DIR}/sol2-src)
+set(CMAKE_C_COMPILER   "C:/mingw64/bin/gcc.exe")
+set(CMAKE_CXX_COMPILER "C:/mingw64/bin/g++.exe")
 
-# ==============================
-# ExternalProject: ENet
-# ==============================
-include(ExternalProject)
-ExternalProject_Add(
-    enet_external
+set(FETCHCONTENT_BASE_DIR "${CMAKE_BINARY_DIR}/_deps")
+
+# ----------------------------------------------------------------------
+# Defines
+# ----------------------------------------------------------------------
+add_compile_definitions(
+    _WIN32_WINNT=0x0A00
+    WINVER=0x0A00
+    _POSIX_C_SOURCE=200809L
+    __USE_MINGW_ANSI_STDIO=1
+    __STDC_WANT_LIB_EXT1__=1
+)
+
+# ----------------------------------------------------------------------
+# Dependências via FetchContent
+# ----------------------------------------------------------------------
+include(FetchContent)
+
+# --- ENet ---
+FetchContent_Declare(
+    enet
     GIT_REPOSITORY https://github.com/lsalzman/enet.git
-    GIT_TAG v1.3.17
-    SOURCE_DIR ${ENET_SRC}
-    BINARY_DIR ${ENET_BUILD}
-    CONFIGURE_COMMAND cmake -G "Ninja" ${ENET_SRC} -DCMAKE_BUILD_TYPE=Release
-    BUILD_COMMAND cmake --build ${ENET_BUILD}
-    INSTALL_COMMAND ""
+    GIT_TAG        v1.3.17
 )
+FetchContent_MakeAvailable(enet)
 
-# ==============================
-# ExternalProject: nlohmann/json
-# ==============================
-ExternalProject_Add(
-    json_external
+# --- nlohmann/json ---
+FetchContent_Declare(
+    json
     GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG v3.11.3
-    SOURCE_DIR ${JSON_SRC}
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
+    GIT_TAG        v3.11.3
 )
+FetchContent_MakeAvailable(json)
 
-# ==============================
-# ExternalProject: SOCI (MySQL)
-# ==============================
-ExternalProject_Add(
-    soci_external
-    GIT_REPOSITORY https://github.com/SOCI/soci.git
-    GIT_TAG master
-    SOURCE_DIR ${SOCI_SRC}
-    BINARY_DIR ${SOCI_BUILD}
-    CONFIGURE_COMMAND cmake -G "Ninja"
-        -DCMAKE_BUILD_TYPE=Release
-        -DSOCI_TESTS=OFF
-        -DSOCI_STATIC=ON
-        -DSOCI_SHARED=OFF
-        -DSOCI_MYSQL=ON
-        -DSOCI_ODBC=OFF
-        -DSOCI_SQLITE3=OFF
-        -DCMAKE_CXX_FLAGS=-fno-lto
-        -DCMAKE_C_FLAGS=-fno-lto
-        -DMySQL_INCLUDE_DIRS=C:/mariadb-connector-c/include/mariadb
-        -DMySQL_LIBRARIES=C:/mariadb-connector-c/lib/mariadb/libmariadb.a
-        ${SOCI_SRC}
-    BUILD_COMMAND cmake --build ${SOCI_BUILD}
-    INSTALL_COMMAND ""
-)
-
-ExternalProject_Add(
-    lua_external
-    GIT_REPOSITORY https://github.com/LuaDist/lua.git
-    GIT_TAG master
-    SOURCE_DIR ${LUA_SRC}
-    BINARY_DIR ${LUA_BUILD}
-
-    # Executa antes da configuração: renomeia luaconf.h.orig -> luaconf.h
-    PATCH_COMMAND
-        ${CMAKE_COMMAND} -E copy_if_different
-            ${LUA_SRC}/src/luaconf.h.orig
-            ${LUA_SRC}/src/luaconf.h
-        COMMAND ${CMAKE_COMMAND} -E echo "✅ Renomeado luaconf.h.orig -> luaconf.h"
-
-    # Configuração normal
-    CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-    BUILD_COMMAND cmake --build ${LUA_BUILD}
-    INSTALL_COMMAND ""
-)
-
-# ==============================
-# ExternalProject: sol2
-# ==============================
-ExternalProject_Add(
-    sol2_external
+# --- sol2 ---
+FetchContent_Declare(
+    sol2
     GIT_REPOSITORY https://github.com/ThePhD/sol2.git
-    GIT_TAG main
-    SOURCE_DIR ${SOL2_SRC}
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
+    GIT_TAG        main
+)
+FetchContent_MakeAvailable(sol2)
+
+# --- Lua ---
+FetchContent_Declare(
+    lua
+    GIT_REPOSITORY https://github.com/lua/lua.git
+    GIT_TAG        v5.4.6
+)
+FetchContent_MakeAvailable(lua)
+
+file(GLOB LUA_SOURCES "${lua_SOURCE_DIR}/*.c")
+add_library(lua_static STATIC ${LUA_SOURCES})
+set_target_properties(lua_static PROPERTIES LINKER_LANGUAGE C)
+target_include_directories(lua_static PUBLIC "${lua_SOURCE_DIR}")
+
+# ----------------------------------------------------------------------
+# SOCI – MYSQL (MariaDB)
+# ----------------------------------------------------------------------
+
+# Configurações SOCI ANTES do FetchContent
+set(SOCI_TESTS OFF CACHE BOOL "" FORCE)
+set(SOCI_STATIC ON CACHE BOOL "" FORCE)
+set(SOCI_SHARED OFF CACHE BOOL "" FORCE)
+set(SOCI_CORE ON CACHE BOOL "" FORCE)
+set(SOCI_EMPTY ON CACHE BOOL "" FORCE)
+set(SOCI_MYSQL ON CACHE BOOL "" FORCE)
+
+# Configurar MySQL/MariaDB
+set(MySQL_INCLUDE_DIRS "C:/mariadb-connector-c/include/mariadb" CACHE PATH "" FORCE)
+set(MySQL_LIBRARIES "C:/mariadb-connector-c/lib/mariadb/liblibmariadb.dll.a" CACHE FILEPATH "" FORCE)
+set(MySQL_FOUND TRUE CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    soci
+    GIT_REPOSITORY https://github.com/SOCI/soci.git
+    GIT_TAG        master
 )
 
+FetchContent_MakeAvailable(soci)
+
+# ----------------------------------------------------------------------
+# OpenSSL
+# ----------------------------------------------------------------------
+set(OPENSSL_ROOT_DIR "C:/msys64/mingw64")
+find_package(OpenSSL REQUIRED)
+
+# ----------------------------------------------------------------------
+# Projeto
+# ----------------------------------------------------------------------
 file(GLOB_RECURSE SRC_FILES
     "${CMAKE_SOURCE_DIR}/src/*.cpp"
     "${CMAKE_SOURCE_DIR}/src/*.c"
 )
 
-# ==============================
-# Executável
-# ==============================
-# Compilar executável com suporte a Lua
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
-# ==============================
-# Dependências (sem Lua por enquanto)
-# ==============================
-add_dependencies(${PROJECT_NAME} enet_external json_external soci_external)
-
-# ==============================
+# ----------------------------------------------------------------------
 # Includes
-# ==============================
+# ----------------------------------------------------------------------
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${ENET_SRC}/include
-    ${JSON_SRC}/single_include
-    ${SOCI_SRC}/include
-    ${SOCI_BUILD}/include
-    ${LUA_SRC}/src
-    ${SOL2_SRC}/include
-    C:/mariadb-connector-c/include/mariadb
-    C:/mingw64/include
-    
-    # Novos diretórios de código fonte
-    ${CMAKE_SOURCE_DIR}/src/config
-    ${CMAKE_SOURCE_DIR}/src/server
-    ${CMAKE_SOURCE_DIR}/src/database
-    ${CMAKE_SOURCE_DIR}/src/network
-    ${CMAKE_SOURCE_DIR}/src/game
-    ${CMAKE_SOURCE_DIR}/src/utils
+    "${CMAKE_SOURCE_DIR}/src"
+    "${json_SOURCE_DIR}/single_include"
+    "${sol2_SOURCE_DIR}/include"
+    "${lua_SOURCE_DIR}"
+    "${enet_SOURCE_DIR}/include"
+    "${OPENSSL_INCLUDE_DIR}"
+    "C:/mariadb-connector-c/include/mariadb"
+    "${soci_SOURCE_DIR}/include"
 )
 
-# ==============================
-# Link
-# ==============================
-target_link_directories(${PROJECT_NAME} PRIVATE
-    ${ENET_BUILD}
-    ${SOCI_BUILD}/lib
-    ${LUA_BUILD}
-    C:/mariadb-connector-c/lib/mariadb
-)
-
+# ----------------------------------------------------------------------
+# Linkagem
+# ----------------------------------------------------------------------
 target_link_libraries(${PROJECT_NAME} PRIVATE
     enet
-    soci_mysql
     soci_core
-    mariadb
-    lua
-    ws2_32
-    winmm
+    soci_mysql
+    soci_empty
+    lua_static
+    nlohmann_json::nlohmann_json
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    "C:/mariadb-connector-c/lib/mariadb/liblibmariadb.dll.a"
+    ws2_32 crypt32 wsock32 advapi32 gdi32 user32 kernel32
+    secur32 bcrypt rpcrt4 userenv version winmm
 )
 
-# ==============================
-# Flags - Desabilitar LTO
-# ==============================
+# ----------------------------------------------------------------------
+# Flags de compilação
+# ----------------------------------------------------------------------
 target_compile_options(${PROJECT_NAME} PRIVATE
-    -std=c++20
-    -Wno-cpp
-    -Wno-deprecated-declarations
-    -fno-lto
+    -Wno-cpp -Wno-deprecated-declarations -fno-lto
+    -D_GLIBCXX_USE_C99 -D_GLIBCXX_HAVE_WCSTOF
 )
 
 target_link_options(${PROJECT_NAME} PRIVATE
-    -fno-lto
+    -fno-lto -static-libgcc -static-libstdc++
 )
 
-# ==============================
+# ----------------------------------------------------------------------
 # Output
-# ==============================
+# ----------------------------------------------------------------------
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
-# ==============================
-# Pós-build: Copiar arquivos necessários
-# ==============================
+# ----------------------------------------------------------------------
+# Pós-build - Copia scripts
+# ----------------------------------------------------------------------
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${LUA_BUILD}/liblua.dll
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>/liblua.dll
-    COMMENT "Copiando liblua.dll para o diretório de saída"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/scripts"
 )
 
-# Criar diretório de scripts se não existir
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>/scripts
-    COMMENT "Criando diretório de scripts"
-)
-
-# Copiar scripts Lua para o diretório de saída
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/src/scripts
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>/scripts
-    COMMENT "Copiando scripts Lua para o diretório de saída"
-)
-
-# Copiar DLLs do MariaDB se existirem
-if(EXISTS "C:/mariadb-connector-c/lib/libmariadb.dll")
+if(EXISTS "${CMAKE_SOURCE_DIR}/src/scripts")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-            "C:/mariadb-connector-c/lib/libmariadb.dll"
-            $<TARGET_FILE_DIR:${PROJECT_NAME}>
-        COMMENT "Copiando libmariadb.a para o diretório de saída"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/src/scripts"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/scripts"
     )
 endif()
 
-# Garantir que o luaconf.h exista no diretório de build
+# ----------------------------------------------------------------------
+# Pós-build - Copia DLLs necessárias
+# ----------------------------------------------------------------------
+
+# MariaDB DLL
+if(EXISTS "C:/mariadb-connector-c/lib/mariadb/libmariadb.dll")
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "C:/mariadb-connector-c/lib/mariadb/libmariadb.dll"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+        COMMENT "Copiando libmariadb.dll..."
+    )
+endif()
+
+# OpenSSL DLLs do MSYS2
+set(OPENSSL_DLL_PATH "C:/msys64/mingw64/bin")
+set(OPENSSL_DLLS
+    "libssl-3-x64.dll"
+    "libcrypto-3-x64.dll"
+)
+
+foreach(dll ${OPENSSL_DLLS})
+    if(EXISTS "${OPENSSL_DLL_PATH}/${dll}")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${OPENSSL_DLL_PATH}/${dll}"
+                "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            COMMENT "Copiando ${dll}..."
+        )
+    endif()
+endforeach()
+
+# MinGW Runtime DLLs (se necessário)
+set(MINGW_DLL_PATH "C:/mingw64/bin")
+set(MINGW_DLLS
+    "libgcc_s_seh-1.dll"
+    "libstdc++-6.dll"
+    "libwinpthread-1.dll"
+)
+
+foreach(dll ${MINGW_DLLS})
+    if(EXISTS "${MINGW_DLL_PATH}/${dll}")
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${MINGW_DLL_PATH}/${dll}"
+                "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            COMMENT "Copiando ${dll}..."
+        )
+    endif()
+endforeach()
+
+# Mensagem de sucesso
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${LUA_SRC}/src/luaconf.h
-        ${LUA_BUILD}/src/luaconf.h
-    COMMENT "Copiando luaconf.h para o diretório de build"
+    COMMAND ${CMAKE_COMMAND} -E echo "✓ Build completo! Todas as DLLs necessárias foram copiadas."
 )
