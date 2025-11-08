@@ -7,9 +7,11 @@ bool Logger::console_output_ = true;
 Logger::Level Logger::min_level_ = Logger::Level::DEBUG;
 
 void Logger::initialize(const std::string& filename) {
-    std::lock_guard<std::mutex> lock(log_mutex_);
-    log_file_.open(filename, std::ios::app);
-    
+    {
+        std::lock_guard<std::mutex> lock(log_mutex_);
+        log_file_.open(filename, std::ios::app);
+    } // 🔓 mutex liberado aqui
+
     if (log_file_.is_open()) {
         log(Level::INFO, "Logger initialized");
     }

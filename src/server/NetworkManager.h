@@ -6,7 +6,8 @@
 #include <vector>
 #include <string>
 #include <cstdint>
-
+#include "RPCHandler.h"
+#include "RPCRegistry.h"
 enum class PacketType : uint8_t {
     CONNECT = 0,
     DISCONNECT,
@@ -17,7 +18,8 @@ enum class PacketType : uint8_t {
     CHAT_MESSAGE,
     WORLD_STATE,
     RPC_CALL,
-    BROADCAST
+    BROADCAST,
+    NETWORK_COMMAND_REMOTE_CALL = 0x20     // 32 em decimal
 };
 
 struct Packet {
@@ -40,15 +42,20 @@ public:
     // Envio de dados
     bool sendPacket(uint32_t peer_id, PacketType type, const std::vector<uint8_t>& data, bool reliable = true);
     bool broadcastPacket(PacketType type, const std::vector<uint8_t>& data, uint32_t exclude_peer = 0);
-    
+    // void sendRPC(uint32_t peer_id, const std::string& node_path,
+    //                   const std::string& method, const std::vector<Variant>& args,
+    //                   bool reliable = true);
+                      
     // Gerenciamento de peers
     void disconnectPeer(uint32_t peer_id);
     size_t getConnectedPeerCount() const;
     
+    RPCHandler& getRPCHandler() { return rpc_handler_; }
     ENetHost* getHost() const { return host_; }
 
 private:
     ENetHost* host_;
+    RPCHandler rpc_handler_;
     uint16_t port_;
     size_t max_clients_;
     

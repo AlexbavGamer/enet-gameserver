@@ -53,6 +53,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(sol2)
 
+# --- magic_enum ---
+FetchContent_Declare(
+    magic_enum
+    GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
+    GIT_TAG        v0.9.5
+)
+FetchContent_MakeAvailable(magic_enum)
+
 # --- Lua ---
 FetchContent_Declare(
     lua
@@ -119,6 +127,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "${OPENSSL_INCLUDE_DIR}"
     "C:/mariadb-connector-c/include/mariadb"
     "${soci_SOURCE_DIR}/include"
+    "${magic_enum_SOURCE_DIR}/include"
 )
 
 # ----------------------------------------------------------------------
@@ -142,14 +151,13 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 # Flags de compilação
 # ----------------------------------------------------------------------
 target_compile_options(${PROJECT_NAME} PRIVATE
-    -Wno-cpp -Wno-deprecated-declarations -fno-lto
-    -D_GLIBCXX_USE_C99 -D_GLIBCXX_HAVE_WCSTOF
+    -Wno-cpp
+    -Wno-deprecated-declarations
+    -fno-lto
+    -D_GLIBCXX_USE_C99
+    -D_GLIBCXX_HAVE_WCSTOF
+    -Wa,-mbig-obj
 )
-
-target_link_options(${PROJECT_NAME} PRIVATE
-    -fno-lto -static-libgcc -static-libstdc++
-)
-
 # ----------------------------------------------------------------------
 # Output
 # ----------------------------------------------------------------------

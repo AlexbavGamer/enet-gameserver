@@ -1,9 +1,11 @@
 // src/server/NetworkManager.cpp
 #include "server/NetworkManager.h"
 #include "utils/Logger.h"
+#include <magic_enum/magic_enum.hpp>
+#include "NetworkManager.h"
 
 NetworkManager::NetworkManager(uint16_t port, size_t max_clients)
-    : host_(nullptr), port_(port), max_clients_(max_clients), next_peer_id_(1) {}
+    : host_(nullptr), port_(port), max_clients_(max_clients), next_peer_id_(1), rpc_handler_() {}
 
 NetworkManager::~NetworkManager() {
     shutdown();
@@ -69,16 +71,27 @@ std::vector<Packet> NetworkManager::pollEvents(uint32_t timeout_ms) {
                 auto it = peer_to_id_.find(event.peer);
                 if (it != peer_to_id_.end()) {
                     Packet pkt;
-                    pkt.type = static_cast<PacketType>(event.packet->data[0]);
                     pkt.peer_id = it->second;
-                    pkt.data.assign(event.packet->data + 1, 
-                                   event.packet->data + event.packet->dataLength);
-                    packets.push_back(pkt);
+
+                    // DETECTA GODOT RPCs
+                    if (event.packet->dataLength > 0) {
+                        uint8_t cmd = event.packet->data[0];
+                        if (cmd == 0x20) {
+                            pkt.type = PacketType::NETWORK_COMMAND_REMOTE_CALL;
+                        } else {
+                            pkt.type = static_cast<PacketType>(cmd);
+                        }
+                    } else {
+                        pkt.type = PacketType::DISCONNECT; // fallback
+                    }
+
+                    pkt.data.assign(event.packet->data, event.packet->data + event.packet->dataLength);
+                    packets.push_back(std::move(pkt));
                 }
                 enet_packet_destroy(event.packet);
                 break;
             }
-            
+
             default:
                 break;
         }
@@ -121,6 +134,15 @@ bool NetworkManager::broadcastPacket(PacketType type, const std::vector<uint8_t>
     
     return true;
 }
+
+// void NetworkManager::sendRPC(uint32_t peer_id, const std::string &node_path, const std::string &method, const std::vector<Variant> &args, bool reliable)
+// {
+// auto payload = rpc_handler_. buildGodotRPCPacket(node_path, method, args);
+// std::vector<uint8_t> pkt;
+// pkt.push_back(static_cast<uint8_t>(PacketType::RPC_CALL));
+// pkt.insert(pkt.end(), payload.begin(), payload.end());
+// sendPacket(peer_id, PacketType::RPC_CALL, std::vector<uint8_t>(payload.begin(), payload.end()), reliable);
+// }
 
 void NetworkManager::disconnectPeer(uint32_t peer_id) {
     auto it = id_to_peer_.find(peer_id);

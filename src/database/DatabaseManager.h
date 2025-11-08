@@ -2,6 +2,7 @@
 #pragma once
 
 #include <soci/soci.h>
+#include <soci/mysql/soci-mysql.h>
 #include <string>
 #include <memory>
 #include <future>

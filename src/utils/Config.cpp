@@ -31,17 +31,34 @@ std::string Config::getDatabaseConnectionString() const {
     std::stringstream ss;
     
     std::string db_type = config_["database"]["type"];
-    
+
     if (db_type == "postgresql") {
         ss << "postgresql://"
            << "dbname=" << config_["database"]["name"].get<std::string>() << " "
-           << "user=" << config_["database"]["user"].get<std::string>() << " "
-           << "password=" << config_["database"]["password"].get<std::string>() << " "
-           << "host=" << config_["database"]["host"].get<std::string>() << " "
+           << "user=" << config_["database"]["user"].get<std::string>() << " ";
+
+        if (config_["database"].contains("password") && !config_["database"]["password"].get<std::string>().empty()) {
+            ss << "password=" << config_["database"]["password"].get<std::string>() << " ";
+        }
+
+        ss << "host=" << config_["database"]["host"].get<std::string>() << " "
            << "port=" << config_["database"]["port"].get<int>();
+
     } else if (db_type == "sqlite") {
         ss << "sqlite3://db=" << config_["database"]["name"].get<std::string>();
+
+    } else if (db_type == "mysql") {
+        ss << "mysql://"
+           << "db=" << config_["database"]["name"].get<std::string>() << " "
+           << "user=" << config_["database"]["user"].get<std::string>() << " ";
+
+        if (config_["database"].contains("password") && !config_["database"]["password"].get<std::string>().empty()) {
+            ss << "password=" << config_["database"]["password"].get<std::string>() << " ";
+        }
+
+        ss << "host=" << config_["database"]["host"].get<std::string>() << " "
+           << "port=" << config_["database"]["port"].get<int>();
     }
-    
+
     return ss.str();
 }

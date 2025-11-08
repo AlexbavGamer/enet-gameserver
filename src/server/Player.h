@@ -3,22 +3,8 @@
 #include <string>
 #include <cstdint>
 #include <nlohmann/json.hpp>
+#include "utils/Structs.h"
 
-struct Vector3 {
-    float x, y, z;
-    
-    nlohmann::json toJson() const {
-        return {{"x", x}, {"y", y}, {"z", z}};
-    }
-};
-
-struct Vector2 {
-    float x,y;
-
-    nlohmann::json toJson() const {
-        return {{"x", x}, {"y", y}};
-    }
-};
 
 class Player {
 public:

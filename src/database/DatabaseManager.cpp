@@ -11,8 +11,9 @@ bool DatabaseManager::connect(const std::string& connection_string) {
     try {
         connection_string_ = connection_string;
 
+        soci::register_factory_mysql();
         // Cria sessão principal usando backend genérico
-        sql_ = std::make_unique<soci::session>();
+        sql_ = std::make_unique<soci::session>(connection_string_);
 
         ensureTablesExist();
 
